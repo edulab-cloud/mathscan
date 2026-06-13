@@ -165,6 +165,17 @@ JSON の配列で返してください（例：["work", "average"]）
 
 【問題】
 `;
+ async function callAI(prompt) {
+  const res = await fetch("https://visionocr-450988444553.asia-northeast1.run.app/gemini", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+
+  const json = await res.json();
+  return json.text;
+}
+
 async function getTags(question) {
   const prompt = TAGGING_PROMPT + question;
   const result = await callAI(prompt);
