@@ -1,0 +1,26 @@
+{
+  "planting": { "name": "植木算", "problems": [] },
+  "arrangement": { "name": "配列算", "problems": [] },
+  "combinatorics": { "name": "組合せ算", "problems": [] },
+  "logic": { "name": "推理", "problems": [] },
+
+  "sum_difference": { "name": "和差算", "problems": [] },
+  "difference_split": { "name": "差分け算", "problems": [] },
+  "system": { "name": "つるかめ算", "problems": [] },
+  "surplus": { "name": "過不足算", "problems": [] },
+
+  "average": { "name": "平均算", "problems": [] },
+  "elimination": { "name": "消去算", "problems": [] },
+  "age": { "name": "年齢算", "problems": [] },
+  "distribution": { "name": "分配算", "problems": [] },
+  "price": { "name": "定価算", "problems": [] },
+  "tax": { "name": "税算", "problems": [] },
+  "proportion": { "name": "相当算", "problems": [] },
+  "concentration": { "name": "濃度算", "problems": [] },
+  "work": { "name": "仕事算", "problems": [] },
+  "total": { "name": "のべ算", "problems": [] },
+
+  "water": { "name": "水量変化", "problems": [] },
+  "speed_graph": { "name": "速さグラフ", "problems": [] },
+  "quantity_change": { "name": "量と変化", "problems": [] }
+}
