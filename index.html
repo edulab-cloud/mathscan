@@ -130,7 +130,44 @@
   <div id="problems"></div>
 
 <script>
-/* キーキャップ数字の装飾 */
+const TAGGING_PROMPT = `
+あなたは中学受験算数の専門家です。
+
+以下の算数問題を、次の「公式単元タグ体系」に基づいて分類してください。
+最も適切なタグを1〜3個返してください。
+タグは必ず下記の一覧から選んでください。
+
+【公式単元タグ体系】
+- planting（植木算）
+- arrangement（配列算）
+- combinatorics（組合せ算）
+- logic（推理）
+- sum_difference（和差算）
+- difference_split（差分け算）
+- system（つるかめ算）
+- surplus（過不足算）
+- average（平均算）
+- elimination（消去算）
+- age（年齢算）
+- distribution（分配算）
+- price（定価算）
+- tax（税算）
+- proportion（相当算）
+- concentration（濃度算）
+- work（仕事算）
+- total（のべ算）
+- water（水量変化）
+- speed_graph（速さグラフ）
+- quantity_change（量と変化）
+
+【出力形式】
+JSON の配列で返してください（例：["work", "average"]）
+
+【問題】
+`;
+
+  
+  /* キーキャップ数字の装飾 */
 function decorateKeycaps(text) {
   return text.replace(/([0-9⃣🔟]+)/g, match => {
     if (match.includes("⃣") || match === "🔟") {
