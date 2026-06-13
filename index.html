@@ -206,6 +206,22 @@ async function send() {
 
   reader.readAsDataURL(file);
 }
+let data = {};
+
+async function loadData() {
+  try {
+    const res = await fetch("data.json");
+    data = await res.json();
+    console.log("data.json 読み込み成功", data);
+  } catch (e) {
+    console.error("data.json の読み込みに失敗", e);
+  }
+}
+window.onload = () => {
+  loadData();
+};
+
+
 </script>
 
 </body>
