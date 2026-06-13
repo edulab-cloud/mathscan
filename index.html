@@ -165,8 +165,17 @@ JSON の配列で返してください（例：["work", "average"]）
 
 【問題】
 `;
+async function getTags(question) {
+  const prompt = TAGGING_PROMPT + question;
+  const result = await callAI(prompt);
 
-  
+  try {
+    return JSON.parse(result);
+  } catch (e) {
+    console.error("タグの JSON 解析に失敗:", result);
+    return [];
+  }
+}  
   /* キーキャップ数字の装飾 */
 function decorateKeycaps(text) {
   return text.replace(/([0-9⃣🔟]+)/g, match => {
