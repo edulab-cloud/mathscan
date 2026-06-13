@@ -179,7 +179,8 @@ async function getTags(question) {
   async function testTagging() {
   const q = "A液とB液を混ぜると濃度は何%になりますか？";
   const tags = await getTags(q);
-  console.log("タグ判定結果:", tags);
+  alert("タグ判定結果: " + JSON.stringify(tags));
+}
 }
 
 window.onload = () => {
