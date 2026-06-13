@@ -176,6 +176,16 @@ async function getTags(question) {
     return [];
   }
 }  
+  async function testTagging() {
+  const q = "A液とB液を混ぜると濃度は何%になりますか？";
+  const tags = await getTags(q);
+  console.log("タグ判定結果:", tags);
+}
+
+window.onload = () => {
+  loadData();
+  testTagging();  // ← 一時的に追加
+};
   /* キーキャップ数字の装飾 */
 function decorateKeycaps(text) {
   return text.replace(/([0-9⃣🔟]+)/g, match => {
