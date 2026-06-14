@@ -250,6 +250,9 @@ async function send() {
     const problemsDiv = document.getElementById("problems");
     problemsDiv.innerHTML = "";
     data.structured.problems.forEach(p => {
+       // ★ 追加：タグ付け → 解答生成 → 保存
+  processProblem(p.text);
+      
       problemsDiv.innerHTML += `
         <div class="problem">
           <b>(${p.id})</b><br>
