@@ -192,8 +192,6 @@ async function getTags(question) {
   const tags = await getTags(q);
   alert("タグ判定結果: " + JSON.stringify(tags));
 }
-}
-
 window.onload = () => {
   loadData();
   testTagging();  // ← 一時的に追加
