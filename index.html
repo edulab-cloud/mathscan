@@ -13,7 +13,6 @@
     margin: 0;
   }
 
-  /* キーキャップ数字 */
   .keycap {
     font-size: 32px;
     font-weight: bold;
@@ -56,7 +55,6 @@
     font-size: 18px;
   }
 
-  /* ボタン */
   .btn {
     width: 100%;
     padding: 12px;
@@ -67,41 +65,18 @@
     cursor: pointer;
   }
 
-  .btn-answer {
-    background: #4a90e2;
-    color: white;
-  }
-
-  .btn-explain {
-    background: #50b36a;
-    color: white;
-  }
-
-  .btn-outline {
-    background: #fff;
-    border: 1px solid #4a90e2;
-    color: #4a90e2;
-  }
+  .btn-answer { background: #4a90e2; color: white; }
+  .btn-explain { background: #50b36a; color: white; }
+  .btn-outline { background: #fff; border: 1px solid #4a90e2; color: #4a90e2; }
 
   @media (min-width: 768px) {
-    .btn-row {
-      display: flex;
-      gap: 10px;
-    }
-    .btn {
-      width: auto;
-      flex: 1;
-    }
+    .btn-row { display: flex; gap: 10px; }
+    .btn { width: auto; flex: 1; }
   }
 
-  .hidden {
-    display: none;
-  }
+  .hidden { display: none; }
 
-  .section-title {
-    margin-top: 20px;
-    font-weight: bold;
-  }
+  .section-title { margin-top: 20px; font-weight: bold; }
 
   .answer-box, .explain-box {
     margin-top: 10px;
@@ -130,9 +105,11 @@
   <div id="problems"></div>
 
 <script>
+/* -----------------------------
+   タグ付けプロンプト
+------------------------------ */
 const TAGGING_PROMPT = `
 あなたは中学受験算数の専門家です。
-
 以下の算数問題を、次の「公式単元タグ体系」に基づいて分類してください。
 最も適切なタグを1〜3個返してください。
 タグは必ず下記の一覧から選んでください。
@@ -165,7 +142,11 @@ JSON の配列で返してください（例：["work", "average"]）
 
 【問題】
 `;
- async function callAI(prompt) {
+
+/* -----------------------------
+   Gemini API 呼び出し
+------------------------------ */
+async function callAI(prompt) {
   const res = await fetch("https://visionocr-450988444553.asia-northeast1.run.app/gemini", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -186,17 +167,20 @@ async function getTags(question) {
     console.error("タグの JSON 解析に失敗:", result);
     return [];
   }
-}  
-  async function testTagging() {
+}
+
+/* -----------------------------
+   テスト用（後で削除可）
+------------------------------ */
+async function testTagging() {
   const q = "A液とB液を混ぜると濃度は何%になりますか？";
   const tags = await getTags(q);
   alert("タグ判定結果: " + JSON.stringify(tags));
 }
-window.onload = () => {
-  loadData();
-  testTagging();  // ← 一時的に追加
-};
-  /* キーキャップ数字の装飾 */
+
+/* -----------------------------
+   UI 補助
+------------------------------ */
 function decorateKeycaps(text) {
   return text.replace(/([0-9⃣🔟]+)/g, match => {
     if (match.includes("⃣") || match === "🔟") {
@@ -207,15 +191,16 @@ function decorateKeycaps(text) {
 }
 
 function toggle(id) {
-  const el = document.getElementById(id);
-  el.classList.toggle("hidden");
+  document.getElementById(id).classList.toggle("hidden");
 }
 
 function toggleAll(type) {
-  const elements = document.querySelectorAll(`.${type}-box`);
-  elements.forEach(el => el.classList.toggle("hidden"));
+  document.querySelectorAll(`.${type}-box`).forEach(el => el.classList.toggle("hidden"));
 }
 
+/* -----------------------------
+   OCR → 構造化 → 表示
+------------------------------ */
 async function send() {
   const file = document.getElementById("fileInput").files[0];
   if (!file) {
@@ -227,7 +212,6 @@ async function send() {
   reader.onload = async () => {
     const base64 = reader.result.split(",")[1];
 
-    /* ★ Cloud Run の URL（あなたの実際のURL） */
     const res = await fetch("https://visionocr-450988444553.asia-northeast1.run.app/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -247,10 +231,12 @@ async function send() {
 
     const problemsDiv = document.getElementById("problems");
     problemsDiv.innerHTML = "";
+
     data.structured.problems.forEach(p => {
-       // ★ 追加：タグ付け → 解答生成 → 保存
-  processProblem(p.text);
-      
+
+      // ★ まだ未実装なので一旦コメントアウト
+      // processProblem(p.text);
+
       problemsDiv.innerHTML += `
         <div class="problem">
           <b>(${p.id})</b><br>
@@ -261,11 +247,11 @@ async function send() {
             <button class="btn btn-explain" onclick="toggle('explain-${p.id}')">解説を見る</button>
           </div>
 
-          <div id="answer-${p.id}" class="answer-box answer-box hidden">
+          <div id="answer-${p.id}" class="answer-box hidden">
             ▼ 解答：${p.answer || "（未設定）"}
           </div>
 
-          <div id="explain-${p.id}" class="explain-box explain-box hidden">
+          <div id="explain-${p.id}" class="explain-box hidden">
             ▼ 解説：${p.explain || "（未設定）"}
           </div>
         </div>
@@ -275,6 +261,10 @@ async function send() {
 
   reader.readAsDataURL(file);
 }
+
+/* -----------------------------
+   data.json 読み込み
+------------------------------ */
 let data = {};
 
 async function loadData() {
@@ -286,9 +276,13 @@ async function loadData() {
     console.error("data.json の読み込みに失敗", e);
   }
 }
+
+/* -----------------------------
+   onload（1つに統合）
+------------------------------ */
 window.onload = () => {
   loadData();
-  testTagging();  // ← これを追加
+  testTagging();
 };
 </script>
 
