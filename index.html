@@ -4,255 +4,218 @@
 <meta charset="UTF-8">
 <title>EduScan - OCR学習アプリ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-  body {
-    font-family: "Yu Gothic", sans-serif;
-    padding: 20px;
-    background: #f7f7f7;
-    margin: 0;
+  * { box-sizing: border-box; }
+  body { font-family: "Yu Gothic", "Hiragino Sans", sans-serif; padding: 16px; background: #f0f4f8; margin: 0; }
+  h2 { color: #2c3e50; margin-bottom: 16px; }
+
+  .upload-area {
+    border: 2px dashed #4a90e2; border-radius: 10px; padding: 20px;
+    text-align: center; background: #fff; margin-bottom: 16px; cursor: pointer;
   }
+  .upload-area input { display: none; }
+  .upload-area label { cursor: pointer; color: #4a90e2; font-weight: bold; font-size: 16px; }
+  #preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 6px; display: none; }
 
-  .keycap {
-    font-size: 32px;
-    font-weight: bold;
-    display: inline-block;
-    margin-right: 6px;
-  }
+  .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; transition: opacity .2s; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn-primary { background: #4a90e2; color: #fff; width: 100%; margin-top: 8px; }
+  .btn-answer  { background: #4a90e2; color: #fff; }
+  .btn-explain { background: #27ae60; color: #fff; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-row .btn { flex: 1; }
 
-  #intro {
-    white-space: pre-wrap;
-    margin: 15px 0;
-    padding: 10px;
-    background: #fff;
-    border-left: 4px solid #4a90e2;
-    font-size: 18px;
-  }
+  #status { margin: 12px 0; color: #666; font-size: 14px; min-height: 20px; }
 
-  .cards {
-    display: flex;
-    gap: 8px;
-    margin: 10px 0;
-    flex-wrap: wrap;
-  }
+  #intro { white-space: pre-wrap; padding: 12px; background: #fff; border-left: 4px solid #4a90e2; border-radius: 4px; font-size: 16px; margin-bottom: 12px; display: none; }
 
-  .card {
-    padding: 12px 16px;
-    border: 2px solid #444;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #fff, #f0f0f0);
-    font-size: 20px;
-    font-weight: bold;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-  }
+  .cards { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .card { padding: 10px 16px; border: 2px solid #444; border-radius: 8px; background: linear-gradient(180deg,#fff,#f0f0f0); font-size: 20px; font-weight: bold; box-shadow: 2px 2px 4px rgba(0,0,0,.15); }
 
-  .problem {
-    border: 1px solid #ccc;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 6px;
-    background: #fff;
-    font-size: 18px;
-  }
+  .problem { border: 1px solid #ddd; padding: 14px; margin-bottom: 12px; border-radius: 8px; background: #fff; font-size: 16px; line-height: 1.7; }
+  .problem b { font-size: 17px; }
 
-  .btn {
-    width: 100%;
-    padding: 12px;
-    margin: 6px 0;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-  }
+  .answer-box, .explain-box { margin-top: 10px; padding: 12px; border-radius: 6px; line-height: 1.7; display: none; }
+  .answer-box { background: #eaf4ff; border-left: 3px solid #4a90e2; }
+  .explain-box { background: #eafaf1; border-left: 3px solid #27ae60; }
 
-  .btn-answer { background: #4a90e2; color: white; }
-  .btn-explain { background: #50b36a; color: white; }
-
-  @media (min-width: 768px) {
-    .btn-row { display: flex; gap: 10px; }
-    .btn { width: auto; flex: 1; }
-  }
-
-  .hidden { display: none; }
-
-  .section-title { margin-top: 20px; font-weight: bold; }
-
-  .answer-box, .explain-box {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f0f8ff;
-    border-radius: 6px;
-    line-height: 1.6;
-  }
+  .global-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+  .global-btns .btn { flex: 1; }
 </style>
 </head>
-
 <body>
-  <h2>EduScan - スキャン学習アプリ</h2>
 
-  <input type="file" id="fileInput"><br><br>
-  <button class="btn btn-answer" onclick="send()">問題文を送信</button>
+<h2>📚 EduScan - スキャン学習アプリ</h2>
 
-  <div class="section-title">全問まとめて</div>
-  <div class="btn-row">
-    <button class="btn btn-answer" onclick="toggleAll('answer')">全問の解答を見る</button>
-    <button class="btn btn-explain" onclick="toggleAll('explain')">全問の解説を見る</button>
-  </div>
+<div class="upload-area" onclick="document.getElementById('fileInput').click()">
+  <label>📷 画像をタップして選択</label>
+  <input type="file" id="fileInput" accept="image/*" onchange="onFileChange(event)">
+  <br>
+  <img id="preview">
+</div>
 
-  <div id="intro"></div>
-  <div class="cards" id="cards"></div>
-  <div id="problems"></div>
+<button class="btn btn-primary" id="sendBtn" onclick="send()" disabled>問題文を読み取る</button>
+
+<div id="status"></div>
+
+<div id="intro"></div>
+<div class="cards" id="cards"></div>
+
+<div class="global-btns" id="globalBtns" style="display:none">
+  <button class="btn btn-answer" onclick="toggleAll('answer-box')">全問の解答</button>
+  <button class="btn btn-explain" onclick="toggleAll('explain-box')">全問の解説</button>
+</div>
+
+<div id="problems"></div>
 
 <script>
-/* -----------------------------
-   タグ付けプロンプト
------------------------------- */
-const TAGGING_PROMPT = `
-あなたは中学受験算数の専門家です。
-以下の算数問題を、次の「公式単元タグ体系」に基づいて分類してください。
-最も適切なタグを1〜3個返してください。
-タグは必ず下記の一覧から選んでください。
+// ── ファイル選択 ──────────────────────────────────────
+let currentBase64 = null;
 
-【公式単元タグ体系】
-（省略：あなたの元コードと同じ）
-【問題】
-`;
-
-/* -----------------------------
-   Gemini API 呼び出し
------------------------------- */
-async function callAI(prompt) {
-  const res = await fetch("https://visionocr-450988444553.asia-northeast1.run.app/gemini", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt })
-  });
-
-  const json = await res.json();
-  return json.text;
-}
-
-/* -----------------------------
-   タグ付け（JSON 抽出を強化）
------------------------------- */
-async function getTags(question) {
-  const prompt = TAGGING_PROMPT + question;
-  const result = await callAI(prompt);
-
-  // ★★★ 正規表現を new RegExp に変更（絶対に壊れない） ★★★
-  const match = result.match(new RegExp("\
-
-\[[\\s\\S]*?\\]
-
-"));
-
-  if (!match) {
-    console.error("JSON 部分が見つからない:", result);
-    return [];
-  }
-
-  try {
-    return JSON.parse(match[0]);
-  } catch (e) {
-    console.error("JSON.parse に失敗:", match[0]);
-    return [];
-  }
-}
-
-/* -----------------------------
-   UI 補助
------------------------------- */
-function decorateKeycaps(text) {
-  return text.replace(/[0-9]+/g, m => `<span class="keycap">${m}</span>`);
-}
-
-function toggle(id) {
-  document.getElementById(id).classList.toggle("hidden");
-}
-
-function toggleAll(type) {
-  document.querySelectorAll(`.${type}-box`).forEach(el => el.classList.toggle("hidden"));
-}
-
-/* -----------------------------
-   OCR → 構造化 → 表示
------------------------------- */
-async function send() {
-  const file = document.getElementById("fileInput").files[0];
-  if (!file) {
-    alert("画像を選んでください");
-    return;
-  }
-
+function onFileChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
-  reader.onload = async () => {
-    const base64 = reader.result.split(",")[1];
-
-    const res = await fetch("https://visionocr-450988444553.asia-northeast1.run.app/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: base64 })
-    });
-
-    const data = await res.json();
-
-    document.getElementById("intro").innerHTML =
-      decorateKeycaps(data.structured.intro);
-
-    const cardsDiv = document.getElementById("cards");
-    cardsDiv.innerHTML = "";
-    data.structured.cards.forEach(n => {
-      cardsDiv.innerHTML += `<div class="card">${n}</div>`;
-    });
-
-    const problemsDiv = document.getElementById("problems");
-    problemsDiv.innerHTML = "";
-
-    data.structured.problems.forEach(p => {
-      problemsDiv.innerHTML += `
-        <div class="problem">
-          <b>(${p.id})</b><br>
-          ${p.text.replace(/\n/g, "<br>")}
-
-          <div class="btn-row">
-            <button class="btn btn-answer" onclick="toggle('answer-${p.id}')">解答を見る</button>
-            <button class="btn btn-explain" onclick="toggle('explain-${p.id}')">解説を見る</button>
-          </div>
-
-          <div id="answer-${p.id}" class="answer-box hidden">
-            ▼ 解答：${p.answer || "（未設定）"}
-          </div>
-
-          <div id="explain-${p.id}" class="explain-box hidden">
-            ▼ 解説：${p.explain || "（未設定）"}
-          </div>
-        </div>
-      `;
-    });
+  reader.onload = () => {
+    currentBase64 = reader.result.split(",")[1];
+    const preview = document.getElementById("preview");
+    preview.src = reader.result;
+    preview.style.display = "block";
+    document.getElementById("sendBtn").disabled = false;
   };
-
   reader.readAsDataURL(file);
 }
 
-/* -----------------------------
-   data.json 読み込み
------------------------------- */
-let data = {};
+// ── UI ヘルパー ───────────────────────────────────────
+function setStatus(msg) { document.getElementById("status").textContent = msg; }
 
-async function loadData() {
+function toggleBox(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function toggleAll(cls) {
+  document.querySelectorAll("." + cls).forEach(el => {
+    el.style.display = el.style.display === "block" ? "none" : "block";
+  });
+}
+
+// ── Claude API 呼び出し ───────────────────────────────
+async function callClaude(messages, maxTokens = 2000) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: maxTokens, messages })
+  });
+  if (!res.ok) throw new Error("API エラー: " + res.status);
+  const data = await res.json();
+  return data.content.map(b => b.text || "").join("");
+}
+
+// ── OCR + 構造化 ──────────────────────────────────────
+async function send() {
+  if (!currentBase64) return;
+  document.getElementById("sendBtn").disabled = true;
+  document.getElementById("globalBtns").style.display = "none";
+  document.getElementById("problems").innerHTML = "";
+  document.getElementById("cards").innerHTML = "";
+  document.getElementById("intro").style.display = "none";
+
+  setStatus("⏳ 画像を読み取り中...");
+
+  const prompt = `この画像は算数の問題ページです。以下のJSON形式で内容を抽出してください。
+余分なテキストや\`\`\`は不要です。JSONのみ返してください。
+
+{
+  "intro": "リード文や条件説明（なければ空文字）",
+  "cards": ["選択肢や数値カードの内容（なければ空配列）"],
+  "problems": [
+    { "id": "1", "text": "問題文", "answer": "解答", "explain": "解説（式や考え方）" }
+  ]
+}`;
+
   try {
-    const res = await fetch("data.json");
-    data = await res.json();
-    console.log("data.json 読み込み成功", data);
+    const raw = await callClaude([{
+      role: "user",
+      content: [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: currentBase64 } },
+        { type: "text", text: prompt }
+      ]
+    }]);
+
+    // JSON 抽出
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("JSONが見つかりません");
+    const structured = JSON.parse(match[0]);
+
+    renderStructured(structured);
+    setStatus("✅ 読み取り完了");
   } catch (e) {
-    console.error("data.json の読み込みに失敗", e);
+    setStatus("❌ エラー: " + e.message);
+    console.error(e);
+  } finally {
+    document.getElementById("sendBtn").disabled = false;
   }
 }
 
-window.onload = () => {
-  loadData();
-};
-</script>
+// ── 解説の非同期取得 ──────────────────────────────────
+async function fetchExplain(p, boxEl) {
+  boxEl.textContent = "⏳ 解説を生成中...";
+  boxEl.style.display = "block";
+  try {
+    const text = await callClaude([{
+      role: "user",
+      content: `以下の算数問題の解説を小学生向けに丁寧に書いてください。\n\n問題: ${p.text}\n解答: ${p.answer}`
+    }]);
+    boxEl.innerHTML = "▼ 解説：<br>" + text.replace(/\n/g, "<br>");
+  } catch (e) {
+    boxEl.textContent = "❌ 解説の取得に失敗しました";
+  }
+}
 
+// ── 画面描画 ──────────────────────────────────────────
+function renderStructured(data) {
+  // イントロ
+  const introEl = document.getElementById("intro");
+  if (data.intro) { introEl.textContent = data.intro; introEl.style.display = "block"; }
+
+  // カード
+  const cardsEl = document.getElementById("cards");
+  (data.cards || []).forEach(n => {
+    cardsEl.innerHTML += `<div class="card">${n}</div>`;
+  });
+
+  // 問題
+  const probleEl = document.getElementById("problems");
+  (data.problems || []).forEach(p => {
+    const div = document.createElement("div");
+    div.className = "problem";
+    div.innerHTML = `
+      <b>(${p.id})</b><br>
+      ${p.text.replace(/\n/g, "<br>")}
+      <div class="btn-row">
+        <button class="btn btn-answer"  onclick="toggleBox('ans-${p.id}')">解答</button>
+        <button class="btn btn-explain" onclick="onExplain('${p.id}', this)">解説</button>
+      </div>
+      <div id="ans-${p.id}" class="answer-box">▼ 解答：${p.answer || "（なし）"}</div>
+      <div id="exp-${p.id}" class="explain-box">${p.explain ? "▼ 解説：" + p.explain : ""}</div>
+    `;
+    // 解説の事前データを紐づけ
+    div.querySelector(".btn-explain")._problemData = p;
+    probleEl.appendChild(div);
+  });
+
+  document.getElementById("globalBtns").style.display = "flex";
+}
+
+// ── 解説ボタン ────────────────────────────────────────
+async function onExplain(id, btn) {
+  const boxEl = document.getElementById("exp-" + id);
+  // すでに内容があればトグル
+  if (boxEl.textContent.trim()) { toggleBox("exp-" + id); return; }
+  const p = btn._problemData;
+  await fetchExplain(p, boxEl);
+}
+</script>
 </body>
 </html>
