@@ -67,7 +67,6 @@
 
   .btn-answer { background: #4a90e2; color: white; }
   .btn-explain { background: #50b36a; color: white; }
-  .btn-outline { background: #fff; border: 1px solid #4a90e2; color: #4a90e2; }
 
   @media (min-width: 768px) {
     .btn-row { display: flex; gap: 10px; }
@@ -187,11 +186,8 @@ async function getTags(question) {
    UI 補助
 ------------------------------ */
 function decorateKeycaps(text) {
-  return text.replace(/([0-9⃣🔟]+)/g, match => {
-    if (match.includes("⃣") || match === "🔟") {
-      return `<span class="keycap">${match}</span>`;
-    }
-    return match;
+  return text.replace(/[0-9]+/g, match => {
+    return `<span class="keycap">${match}</span>`;
   });
 }
 
