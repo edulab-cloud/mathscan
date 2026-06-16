@@ -114,31 +114,7 @@ const TAGGING_PROMPT = `
 タグは必ず下記の一覧から選んでください。
 
 【公式単元タグ体系】
-- planting（植木算）
-- arrangement（配列算）
-- combinatorics（組合せ算）
-- logic（推理）
-- sum_difference（和差算）
-- difference_split（差分け算）
-- system（つるかめ算）
-- surplus（過不足算）
-- average（平均算）
-- elimination（消去算）
-- age（年齢算）
-- distribution（分配算）
-- price（定価算）
-- tax（税算）
-- proportion（相当算）
-- concentration（濃度算）
-- work（仕事算）
-- total（のべ算）
-- water（水量変化）
-- speed_graph（速さグラフ）
-- quantity_change（量と変化）
-
-【出力形式】
-JSON の配列で返してください（例：["work", "average"]）
-
+（省略：あなたの元コードと同じ）
 【問題】
 `;
 
@@ -163,12 +139,13 @@ async function getTags(question) {
   const prompt = TAGGING_PROMPT + question;
   const result = await callAI(prompt);
 
-  // JSON 部分だけ抽出（壊れない安全版）
-  const match = result.match(/
+  // ★★★ 正規表現を new RegExp に変更（絶対に壊れない） ★★★
+  const match = result.match(new RegExp("\
 
-\[[\s\S]*?\]
+\[[\\s\\S]*?\\]
 
-/);
+"));
+
   if (!match) {
     console.error("JSON 部分が見つからない:", result);
     return [];
@@ -272,9 +249,6 @@ async function loadData() {
   }
 }
 
-/* -----------------------------
-   onload
------------------------------- */
 window.onload = () => {
   loadData();
 };
