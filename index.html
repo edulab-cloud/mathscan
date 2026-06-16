@@ -2,219 +2,501 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>EduScan - OCR学習アプリ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduScan - AI学習アプリ</title>
 <style>
-  * { box-sizing: border-box; }
-  body { font-family: "Yu Gothic", "Hiragino Sans", sans-serif; padding: 16px; background: #f0f4f8; margin: 0; }
-  h2 { color: #2c3e50; margin-bottom: 16px; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .upload-area {
-    border: 2px dashed #4a90e2; border-radius: 10px; padding: 20px;
-    text-align: center; background: #fff; margin-bottom: 16px; cursor: pointer;
+  :root {
+    --blue:    #2563eb;
+    --blue-lt: #dbeafe;
+    --green:   #16a34a;
+    --green-lt:#dcfce7;
+    --gray-bg: #f1f5f9;
+    --gray-bd: #e2e8f0;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --white:   #ffffff;
+    --radius:  10px;
+    --shadow:  0 1px 4px rgba(0,0,0,.10);
   }
-  .upload-area input { display: none; }
-  .upload-area label { cursor: pointer; color: #4a90e2; font-weight: bold; font-size: 16px; }
-  #preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 6px; display: none; }
 
-  .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; transition: opacity .2s; }
-  .btn:disabled { opacity: .4; cursor: default; }
-  .btn-primary { background: #4a90e2; color: #fff; width: 100%; margin-top: 8px; }
-  .btn-answer  { background: #4a90e2; color: #fff; }
-  .btn-explain { background: #27ae60; color: #fff; }
-  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
-  .btn-row .btn { flex: 1; }
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--gray-bg);
+    color: var(--text);
+    padding: 16px;
+    line-height: 1.75;
+    min-height: 100vh;
+  }
 
-  #status { margin: 12px 0; color: #666; font-size: 14px; min-height: 20px; }
+  /* ── ヘッダー ── */
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .app-header .logo {
+    width: 40px; height: 40px;
+    background: var(--blue);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .app-header h1  { font-size: 20px; font-weight: 700; }
+  .app-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-  #intro { white-space: pre-wrap; padding: 12px; background: #fff; border-left: 4px solid #4a90e2; border-radius: 4px; font-size: 16px; margin-bottom: 12px; display: none; }
+  /* ── アップロード ── */
+  .upload-card {
+    background: var(--white);
+    border: 2px dashed var(--blue);
+    border-radius: var(--radius);
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: background .15s;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .upload-card:hover { background: var(--blue-lt); }
+  .upload-card input[type=file] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .upload-icon  { font-size: 36px; margin-bottom: 6px; }
+  .upload-label { font-size: 15px; font-weight: 600; color: var(--blue); }
+  .upload-hint  { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-  .cards { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .card { padding: 10px 16px; border: 2px solid #444; border-radius: 8px; background: linear-gradient(180deg,#fff,#f0f0f0); font-size: 20px; font-weight: bold; box-shadow: 2px 2px 4px rgba(0,0,0,.15); }
+  #preview {
+    width: 100%; max-height: 220px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: 14px;
+    display: none;
+  }
 
-  .problem { border: 1px solid #ddd; padding: 14px; margin-bottom: 12px; border-radius: 8px; background: #fff; font-size: 16px; line-height: 1.7; }
-  .problem b { font-size: 17px; }
+  /* ── ボタン ── */
+  .btn {
+    display: block; width: 100%;
+    padding: 13px;
+    border: none; border-radius: var(--radius);
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s;
+    margin-bottom: 8px;
+  }
+  .btn:disabled      { opacity: .4; cursor: default; }
+  .btn:active:not(:disabled) { opacity: .75; }
+  .btn-primary { background: var(--blue);  color: var(--white); }
+  .btn-blue    { background: var(--blue);  color: var(--white); flex: 1; }
+  .btn-green   { background: var(--green); color: var(--white); flex: 1; }
 
-  .answer-box, .explain-box { margin-top: 10px; padding: 12px; border-radius: 6px; line-height: 1.7; display: none; }
-  .answer-box { background: #eaf4ff; border-left: 3px solid #4a90e2; }
-  .explain-box { background: #eafaf1; border-left: 3px solid #27ae60; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
 
-  .global-btns { display: flex; gap: 8px; margin-bottom: 16px; }
-  .global-btns .btn { flex: 1; }
+  /* ── ステータス ── */
+  #status {
+    font-size: 13px; color: var(--muted);
+    min-height: 22px; margin: 6px 0 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--gray-bd);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── エラー ── */
+  .error-msg {
+    color: #dc2626; font-size: 13px;
+    background: #fee2e2; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 12px;
+    display: none;
+  }
+
+  /* ── イントロ ── */
+  #intro {
+    white-space: pre-wrap;
+    padding: 12px 14px;
+    background: var(--white);
+    border-left: 4px solid var(--blue);
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  /* ── カード列 ── */
+  .cards {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .num-card {
+    padding: 10px 16px;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    background: linear-gradient(160deg, #fff 50%, #f1f5f9);
+    font-size: 20px; font-weight: 800;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── 問題ブロック ── */
+  .problem {
+    background: var(--white);
+    border: 1px solid var(--gray-bd);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .problem-id {
+    display: inline-block;
+    background: var(--blue); color: var(--white);
+    font-size: 12px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .problem-text { font-size: 15px; }
+
+  /* ── 解答・解説ボックス ── */
+  .ans-box, .exp-box {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px; line-height: 1.85;
+    display: none;
+  }
+  .ans-box { background: var(--blue-lt);  border-left: 3px solid var(--blue); }
+  .exp-box { background: var(--green-lt); border-left: 3px solid var(--green); }
+  .ans-box.open, .exp-box.open { display: block; }
+
+  .ans-value {
+    font-size: 22px; font-weight: 800;
+    color: var(--blue); margin: 4px 0 6px;
+  }
+  .exp-loading { color: var(--muted); font-size: 13px; }
+
+  /* ── 解説レベル切替 ── */
+  .level-selector {
+    display: flex; gap: 6px;
+    margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .level-btn {
+    padding: 6px 14px;
+    border: 2px solid var(--gray-bd);
+    border-radius: 20px;
+    background: var(--white);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; color: var(--muted);
+    transition: all .15s;
+  }
+  .level-btn.active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-lt);
+  }
+
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 0 0 8px;
+  }
 </style>
 </head>
 <body>
 
-<h2>📚 EduScan - スキャン学習アプリ</h2>
+<!-- ヘッダー -->
+<div class="app-header">
+  <div class="logo">📚</div>
+  <div>
+    <h1>EduScan</h1>
+    <div class="sub">写真を撮るだけで解答・解説を生成</div>
+  </div>
+</div>
 
-<div class="upload-area" onclick="document.getElementById('fileInput').click()">
-  <label>📷 画像をタップして選択</label>
+<!-- アップロード -->
+<div class="upload-card">
   <input type="file" id="fileInput" accept="image/*" onchange="onFileChange(event)">
-  <br>
+  <div class="upload-icon">📷</div>
+  <div class="upload-label">問題ページを撮影 または タップして選択</div>
+  <div class="upload-hint">JPG・PNG・HEIC 対応</div>
   <img id="preview">
 </div>
 
-<button class="btn btn-primary" id="sendBtn" onclick="send()" disabled>問題文を読み取る</button>
-
-<div id="status"></div>
-
-<div id="intro"></div>
-<div class="cards" id="cards"></div>
-
-<div class="global-btns" id="globalBtns" style="display:none">
-  <button class="btn btn-answer" onclick="toggleAll('answer-box')">全問の解答</button>
-  <button class="btn btn-explain" onclick="toggleAll('explain-box')">全問の解説</button>
+<!-- 解説レベル -->
+<div class="section-label">解説レベル</div>
+<div class="level-selector">
+  <button class="level-btn active" data-level="elementary" onclick="setLevel(this)">小学生向け</button>
+  <button class="level-btn"        data-level="junior"     onclick="setLevel(this)">中学生向け</button>
+  <button class="level-btn"        data-level="parent"     onclick="setLevel(this)">保護者向け</button>
 </div>
 
+<!-- 送信ボタン -->
+<button class="btn btn-primary" id="sendBtn" onclick="send()" disabled>
+  読み取って解説を生成する
+</button>
+
+<!-- ステータス -->
+<div id="status">
+  <div class="spinner" id="spinner"></div>
+  <span id="statusText"></span>
+</div>
+<div class="error-msg" id="errorMsg"></div>
+
+<!-- 全問まとめ -->
+<div class="btn-row" id="globalRow" style="display:none">
+  <button class="btn btn-blue"  onclick="toggleAll('ans-box')">全問の解答</button>
+  <button class="btn btn-green" onclick="toggleAll('exp-box')">全問の解説</button>
+</div>
+
+<!-- イントロ -->
+<div id="intro"></div>
+
+<!-- カード -->
+<div class="cards" id="cards"></div>
+
+<!-- 問題一覧 -->
 <div id="problems"></div>
 
 <script>
-// ── ファイル選択 ──────────────────────────────────────
-let currentBase64 = null;
+/* ============================================================
+   設定
+   ============================================================ */
+const API_BASE = "https://visionocr-450988444553.asia-northeast1.run.app";
 
+let currentLevel = "elementary";
+
+const LEVEL_PROMPTS = {
+  elementary: "小学6年生にもわかるように、図や具体例・たとえ話を使って丁寧に説明してください。難しい言葉は使わないでください。",
+  junior:     "中学生向けに、公式や式を中心に簡潔に説明してください。",
+  parent:     "保護者向けに、子どもへの教え方のコツや注意点も含めて説明してください。"
+};
+
+/* ============================================================
+   レベル切替
+   ============================================================ */
+function setLevel(btn) {
+  document.querySelectorAll(".level-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  currentLevel = btn.dataset.level;
+}
+
+/* ============================================================
+   ファイル選択
+   ============================================================ */
 function onFileChange(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    currentBase64 = reader.result.split(",")[1];
     const preview = document.getElementById("preview");
     preview.src = reader.result;
     preview.style.display = "block";
     document.getElementById("sendBtn").disabled = false;
+    clearError();
   };
   reader.readAsDataURL(file);
 }
 
-// ── UI ヘルパー ───────────────────────────────────────
-function setStatus(msg) { document.getElementById("status").textContent = msg; }
-
-function toggleBox(id) {
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
-}
-
-function toggleAll(cls) {
-  document.querySelectorAll("." + cls).forEach(el => {
-    el.style.display = el.style.display === "block" ? "none" : "block";
-  });
-}
-
-// ── Claude API 呼び出し ───────────────────────────────
-async function callClaude(messages, maxTokens = 2000) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: maxTokens, messages })
-  });
-  if (!res.ok) throw new Error("API エラー: " + res.status);
-  const data = await res.json();
-  return data.content.map(b => b.text || "").join("");
-}
-
-// ── OCR + 構造化 ──────────────────────────────────────
+/* ============================================================
+   メイン送信
+   ============================================================ */
 async function send() {
-  if (!currentBase64) return;
-  document.getElementById("sendBtn").disabled = true;
-  document.getElementById("globalBtns").style.display = "none";
-  document.getElementById("problems").innerHTML = "";
-  document.getElementById("cards").innerHTML = "";
-  document.getElementById("intro").style.display = "none";
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) return;
 
-  setStatus("⏳ 画像を読み取り中...");
-
-  const prompt = `この画像は算数の問題ページです。以下のJSON形式で内容を抽出してください。
-余分なテキストや\`\`\`は不要です。JSONのみ返してください。
-
-{
-  "intro": "リード文や条件説明（なければ空文字）",
-  "cards": ["選択肢や数値カードの内容（なければ空配列）"],
-  "problems": [
-    { "id": "1", "text": "問題文", "answer": "解答", "explain": "解説（式や考え方）" }
-  ]
-}`;
+  setBusy(true);
+  setStatus("📷 画像を読み取り中...");
+  clearError();
+  clearResults();
 
   try {
-    const raw = await callClaude([{
-      role: "user",
-      content: [
-        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: currentBase64 } },
-        { type: "text", text: prompt }
-      ]
-    }]);
+    const base64 = await toBase64(file);
 
-    // JSON 抽出
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("JSONが見つかりません");
-    const structured = JSON.parse(match[0]);
+    // ① Vision API で OCR
+    const ocrRes = await fetch(`${API_BASE}/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: base64 })
+    });
+    if (!ocrRes.ok) throw new Error(`OCRエラー (${ocrRes.status})`);
+    const ocrData = await ocrRes.json();
+    if (!ocrData.structured) throw new Error("OCRの結果が不正です");
 
-    renderStructured(structured);
-    setStatus("✅ 読み取り完了");
-  } catch (e) {
-    setStatus("❌ エラー: " + e.message);
+    const structured = ocrData.structured;
+    setStatus("🤖 解説を生成中...");
+
+    // ② 各問題の解説を Gemini で生成
+    for (const p of structured.problems || []) {
+      try {
+        const solveRes = await fetch(`${API_BASE}/solve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: buildPrompt(p.text, currentLevel)
+          })
+        });
+        if (solveRes.ok) {
+          const solveData = await solveRes.json();
+          p.explain = solveData.answer || "";
+          // 解答だけ抽出（最初の数値 or 1行目）
+          p.answer = extractAnswer(solveData.answer || "");
+        }
+      } catch(_) {
+        p.explain = "解説の取得に失敗しました";
+      }
+    }
+
+    render(structured);
+    setStatus("✅ 完了");
+
+  } catch(e) {
+    showError(e.message);
+    setStatus("");
     console.error(e);
-  } finally {
-    document.getElementById("sendBtn").disabled = false;
   }
+
+  setBusy(false);
 }
 
-// ── 解説の非同期取得 ──────────────────────────────────
-async function fetchExplain(p, boxEl) {
-  boxEl.textContent = "⏳ 解説を生成中...";
-  boxEl.style.display = "block";
-  try {
-    const text = await callClaude([{
-      role: "user",
-      content: `以下の算数問題の解説を小学生向けに丁寧に書いてください。\n\n問題: ${p.text}\n解答: ${p.answer}`
-    }]);
-    boxEl.innerHTML = "▼ 解説：<br>" + text.replace(/\n/g, "<br>");
-  } catch (e) {
-    boxEl.textContent = "❌ 解説の取得に失敗しました";
-  }
+/* ============================================================
+   プロンプト生成
+   ============================================================ */
+function buildPrompt(questionText, level) {
+  return `あなたは中学受験算数の専門家です。
+以下の問題を解いて、解答と解説を出力してください。
+
+【出力形式】
+解答：（数値や答えのみ）
+解説：（${LEVEL_PROMPTS[level]}）
+途中式：（計算過程を書く）
+つまずきポイント：（1行でまとめる）
+
+【問題】
+${questionText}`;
 }
 
-// ── 画面描画 ──────────────────────────────────────────
-function renderStructured(data) {
+/* ============================================================
+   解答抽出（解説文から「解答：〇〇」を取り出す）
+   ============================================================ */
+function extractAnswer(text) {
+  const m = text.match(/解答[：:]\s*(.+)/);
+  return m ? m[1].trim() : "";
+}
+
+/* ============================================================
+   画面描画
+   ============================================================ */
+function render(s) {
   // イントロ
   const introEl = document.getElementById("intro");
-  if (data.intro) { introEl.textContent = data.intro; introEl.style.display = "block"; }
+  if (s.intro && s.intro.trim()) {
+    introEl.textContent = s.intro;
+    introEl.style.display = "block";
+  }
 
   // カード
   const cardsEl = document.getElementById("cards");
-  (data.cards || []).forEach(n => {
-    cardsEl.innerHTML += `<div class="card">${n}</div>`;
+  (s.cards || []).forEach(n => {
+    const d = document.createElement("div");
+    d.className = "num-card";
+    d.textContent = n;
+    cardsEl.appendChild(d);
   });
 
   // 問題
-  const probleEl = document.getElementById("problems");
-  (data.problems || []).forEach(p => {
-    const div = document.createElement("div");
-    div.className = "problem";
-    div.innerHTML = `
-      <b>(${p.id})</b><br>
-      ${p.text.replace(/\n/g, "<br>")}
-      <div class="btn-row">
-        <button class="btn btn-answer"  onclick="toggleBox('ans-${p.id}')">解答</button>
-        <button class="btn btn-explain" onclick="onExplain('${p.id}', this)">解説</button>
+  const probEl = document.getElementById("problems");
+  (s.problems || []).forEach(p => {
+    const wrap = document.createElement("div");
+    wrap.className = "problem";
+    const ansId = `ans-${p.id}`;
+    const expId = `exp-${p.id}`;
+
+    wrap.innerHTML = `
+      <span class="problem-id">問 ${escHtml(String(p.id))}</span>
+      <div class="problem-text">${escHtml(p.text).replace(/\n/g,"<br>")}</div>
+      <div class="btn-row" style="margin-top:12px;margin-bottom:0">
+        <button class="btn btn-blue"  style="padding:10px 0;font-size:14px"
+                onclick="toggleBox('${ansId}')">解答を見る</button>
+        <button class="btn btn-green" style="padding:10px 0;font-size:14px"
+                onclick="toggleBox('${expId}')">解説を見る</button>
       </div>
-      <div id="ans-${p.id}" class="answer-box">▼ 解答：${p.answer || "（なし）"}</div>
-      <div id="exp-${p.id}" class="explain-box">${p.explain ? "▼ 解説：" + p.explain : ""}</div>
+      <div id="${ansId}" class="ans-box">
+        <div style="font-size:11px;color:#1e40af;font-weight:700;margin-bottom:2px">解答</div>
+        <div class="ans-value">${escHtml(p.answer || "—")}</div>
+      </div>
+      <div id="${expId}" class="exp-box">
+        <div style="font-size:11px;color:#15803d;font-weight:700;margin-bottom:6px">解説</div>
+        ${escHtml(p.explain || "（なし）").replace(/\n/g,"<br>")}
+      </div>
     `;
-    // 解説の事前データを紐づけ
-    div.querySelector(".btn-explain")._problemData = p;
-    probleEl.appendChild(div);
+    probEl.appendChild(wrap);
   });
 
-  document.getElementById("globalBtns").style.display = "flex";
+  document.getElementById("globalRow").style.display =
+    (s.problems || []).length > 0 ? "flex" : "none";
 }
 
-// ── 解説ボタン ────────────────────────────────────────
-async function onExplain(id, btn) {
-  const boxEl = document.getElementById("exp-" + id);
-  // すでに内容があればトグル
-  if (boxEl.textContent.trim()) { toggleBox("exp-" + id); return; }
-  const p = btn._problemData;
-  await fetchExplain(p, boxEl);
+/* ============================================================
+   UI ヘルパー
+   ============================================================ */
+function toggleBox(id) {
+  document.getElementById(id).classList.toggle("open");
+}
+
+function toggleAll(cls) {
+  const boxes = [...document.querySelectorAll("." + cls)];
+  const anyOpen = boxes.some(b => b.classList.contains("open"));
+  boxes.forEach(b => anyOpen ? b.classList.remove("open") : b.classList.add("open"));
+}
+
+function clearResults() {
+  ["intro","cards","problems"].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = "";
+    if (id === "intro") el.style.display = "none";
+  });
+  document.getElementById("globalRow").style.display = "none";
+}
+
+function setBusy(flag) {
+  document.getElementById("sendBtn").disabled = flag;
+  document.getElementById("spinner").style.display = flag ? "block" : "none";
+}
+
+function setStatus(msg) {
+  document.getElementById("statusText").textContent = msg;
+}
+
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.textContent = "❌ " + msg;
+  el.style.display = "block";
+}
+
+function clearError() {
+  const el = document.getElementById("errorMsg");
+  el.textContent = "";
+  el.style.display = "none";
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = () => reject(new Error("ファイル読み込みに失敗しました"));
+    reader.readAsDataURL(file);
+  });
 }
 </script>
 </body>
