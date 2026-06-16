@@ -157,25 +157,30 @@ async function callAI(prompt) {
   return json.text;
 }
 
+/* -----------------------------
+   タグ付け（JSON 抽出を強化）
+------------------------------ */
 async function getTags(question) {
   const prompt = TAGGING_PROMPT + question;
   const result = await callAI(prompt);
 
-  try {
-    return JSON.parse(result);
-  } catch (e) {
-    console.error("タグの JSON 解析に失敗:", result);
+  // JSON 部分だけ抽出
+  const match = result.match(/
+
+\[[\s\S]*?\]
+
+/);
+  if (!match) {
+    console.error("JSON 部分が見つからない:", result);
     return [];
   }
-}
 
-/* -----------------------------
-   テスト用（後で削除可）
------------------------------- */
-async function testTagging() {
-  const q = "A液とB液を混ぜると濃度は何%になりますか？";
-  const tags = await getTags(q);
-  alert("タグ判定結果: " + JSON.stringify(tags));
+  try {
+    return JSON.parse(match[0]);
+  } catch (e) {
+    console.error("JSON.parse に失敗:", match[0]);
+    return [];
+  }
 }
 
 /* -----------------------------
@@ -233,10 +238,6 @@ async function send() {
     problemsDiv.innerHTML = "";
 
     data.structured.problems.forEach(p => {
-
-      // ★ まだ未実装なので一旦コメントアウト
-      // processProblem(p.text);
-
       problemsDiv.innerHTML += `
         <div class="problem">
           <b>(${p.id})</b><br>
@@ -278,11 +279,10 @@ async function loadData() {
 }
 
 /* -----------------------------
-   onload（1つに統合）
+   onload
 ------------------------------ */
 window.onload = () => {
   loadData();
-  testTagging();
 };
 </script>
 
