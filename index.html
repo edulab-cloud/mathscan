@@ -163,7 +163,7 @@ async function getTags(question) {
   const prompt = TAGGING_PROMPT + question;
   const result = await callAI(prompt);
 
-  // JSON 部分だけ抽出
+  // JSON 部分だけ抽出（壊れない安全版）
   const match = result.match(/
 
 \[[\s\S]*?\]
@@ -186,9 +186,7 @@ async function getTags(question) {
    UI 補助
 ------------------------------ */
 function decorateKeycaps(text) {
-  return text.replace(/[0-9]+/g, match => {
-    return `<span class="keycap">${match}</span>`;
-  });
+  return text.replace(/[0-9]+/g, m => `<span class="keycap">${m}</span>`);
 }
 
 function toggle(id) {
